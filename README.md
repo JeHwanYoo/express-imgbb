@@ -4,7 +4,7 @@ Express Middleware for imgbb
 
 Supports multiple file uploads.
 
-It uses the official [imgbb API]((https://api.imgbb.com/)).
+It uses the official imgbb API (https://api.imgbb.com/)
 
 ## HOW TO USE
 
