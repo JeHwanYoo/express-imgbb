@@ -1,20 +1,8 @@
-import { config } from 'dotenv';
 import { Request, Response, NextFunction } from 'express';
 import fetch from 'node-fetch';
 import { stringify } from 'querystring';
 
-config();
-
-const { API_KEY } = process.env;
-
-if (API_KEY === undefined) {
-    console.error('\n[Error] API_KEY is undefined!\n');
-    process.exit();
-}
-
-let API_URL = `https://api.imgbb.com/1/upload?key=${API_KEY}`;
-
-export type ImgbbSuccess = {
+export type ImgbbResponse = {
     data: {
         id: string,
         title: string,
@@ -46,34 +34,33 @@ export type ImgbbSuccess = {
             url: string,
         },
         delete_url: string
-    },
+    } | null,
     success: boolean,
     status: number
-};
-
-export type ImgbbFailure = {
-    status_code: number,
     error: {
         message: string,
         code: number,
-        context: string
-    },
-    status_txt: 'Bad Request'
+        context: string,
+    } | null
 };
 
-export type ImgbbRequest = Array<{
+export type ImgbbRequest = {
     image: string,
-    name: string,
-    expiration: string,
-}>;
+    name?: string,
+    expiration?: string,
+}
 
-export type ImgbbResponse = Array<ImgbbSuccess | ImgbbFailure>;
+export type ImgbbRequestArray = Array<ImgbbRequest>;
+export type ImgbbResponseArray = Array<ImgbbResponse>;
 
 export async function imgbb(req: Request, res: Response, next: NextFunction) {
     const body = req.body;
-    const iRequest: ImgbbRequest = body.iRequest;
-    const iResponse: ImgbbResponse = [];
-    for (const img of iRequest) {
+    const iRequests: ImgbbRequestArray = body.iRequests;
+    const iResponses: ImgbbResponseArray = [];
+    const API_KEY = req.app.get('IMGBB_API_KEY');
+    let API_URL = `https://api.imgbb.com/1/upload?key=${API_KEY}`;
+
+    for (const img of iRequests) {
         if (img.name) {
             API_URL += `&name=${img.name}`;
         }
@@ -90,9 +77,25 @@ export async function imgbb(req: Request, res: Response, next: NextFunction) {
                 image: img.image,
             }),
         });
-        const json: ImgbbSuccess | ImgbbFailure = await response.json();
-        iResponse.push(json);
+        const json = await response.json();
+        let format: ImgbbResponse;
+        if (json.error) {
+            format = {
+                data: null,
+                success: false,
+                status: json.status_code,
+                error: json.error,
+            };
+        } else {
+            format = {
+                data: json.data,
+                success: true,
+                status: 200,
+                error: null,
+            };
+        }
+        iResponses.push(format);
     }
-    req['iResponse'] = iResponse;
+    req['iResponses'] = iResponses;
     next();
 }

@@ -42,7 +42,7 @@
          * @type {HTMLUListElement}
          */
         const fileList = document.querySelector('#file-list');
-        const iRequest = [];
+        const iRequests = [];
         /**
          * @type {HTMLButtonElement} 
          */
@@ -52,7 +52,7 @@
         fileList.style.overflow = 'auto';
 
         function initList() {
-            iRequest.splice(0, iRequest.length);
+            iRequests.splice(0, iRequests.length);
             while (fileList.firstChild) {
                 fileList.removeChild(fileList.firstChild);
             }
@@ -67,7 +67,7 @@
                 const fileReader = new FileReader();
                 fileReader.readAsDataURL(file);
                 fileReader.onload = (evt => {
-                    iRequest.push({
+                    iRequests.push({
                         name: file.name,
                         image: evt.target.result.split(',')[1],
                     });
@@ -90,7 +90,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ iRequest }),
+                body: JSON.stringify({ iRequests }),
             });
 
             initList();
