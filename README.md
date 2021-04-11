@@ -15,7 +15,7 @@ npm install express-imgbb
 ```
 
 ```javascript
-const { imgbb } = require('../dist/index');
+const { imgbb } = require('express-imgbb');
 const express = require('express');
 const path = require('path');
 const app = express();
