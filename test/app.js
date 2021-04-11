@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/upload', imgbb, (req, res) => {
-    res.json(req['iResponse']);
+    res.json(req['iResponses']);
 });
 
 app.listen(port, () => {

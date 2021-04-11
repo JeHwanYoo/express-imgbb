@@ -23,8 +23,11 @@
             </div>
         </div>
         <div class="row">
-            <div class="col">
+            <div class="col-2">
                 <button id="button" type="button" class="btn btn-primary">UPLOAD</button>
+            </div>
+            <div class="col">
+                <div style="display: none;" id="loader">Uploading...</div>
             </div>
         </div>
         <div class="row">
@@ -85,6 +88,12 @@
         });
 
         button.onclick = async evt => {
+            /**
+             * @type {HTMLDivElement}
+             */
+            const loader = document.querySelector('#loader');
+            loader.style.display = 'block';
+
             const response = await fetch('/upload', {
                 method: 'POST',
                 headers: {
@@ -100,9 +109,11 @@
                 const data = await response.json();
                 console.log(data);
                 alert('Upload is complete. Please check the log.');
+                loader.style.display = 'none';
             } else {
                 console.log(response);
                 alert('An error has occurred. Please check the log.');
+                loader.style.display = 'none';
             }
         }
     </script>
