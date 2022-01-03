@@ -1,4 +1,3 @@
 {
-    "compilerOptions": {},
     "exclude": ["node_modules"]
 }

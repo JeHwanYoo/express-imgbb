@@ -90,6 +90,7 @@ export function imgbb(req: Request, res: Response, next: NextFunction) {
         })
         .finally(() => {
           if (count === maxCount) {
+            req['imgbb'] = response
             next()
           }
         })
