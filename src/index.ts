@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
+import fetch from 'node-fetch'
+import FormData from 'form-data'
 
 export type ImgbbResponse = {
   results: Array<{
@@ -45,24 +47,22 @@ export type ImgbbResponse = {
   errors: string[] // Caution, it's not imgbb errors, it's network errors.
 }
 
-export type ImgbbRequest = {
-  apiKey: string
-  images: Array<{
-    image: string | File
-    name?: string
-    expiration?: number
-  }>
-}
+export type ImgbbRequest = Array<{
+  image: string | File
+  name?: string
+  expiration?: number
+}>
 
 export function imgbb(req: Request, res: Response, next: NextFunction) {
-  const { apiKey, images } = req.body.imgbbRequest as ImgbbRequest
+  const request = req.body.imgbbRequest as ImgbbRequest
   let count = 0
-  const maxCount = images.length
+  const maxCount = request.length
   const response = { results: [], errors: [] } as ImgbbResponse
+  const IMGBB_API_KEY = req.app.get('IMGBB_API_KEY')
 
-  if (apiKey && apiKey.length > 0 && images && images.length > 0) {
-    images.forEach(({ image, name, expiration }) => {
-      let url = `https://api.imgbb.com/1/upload?key=${apiKey}`
+  if (request && request.length > 0) {
+    request.forEach(({ image, name, expiration }) => {
+      let url = `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`
       const formData = new FormData()
 
       if (expiration) {
@@ -82,7 +82,7 @@ export function imgbb(req: Request, res: Response, next: NextFunction) {
         .then(async v => {
           const result = await v.json()
           count++
-          response.results.push(result)
+          response.results.push(result as any)
         })
         .catch(e => {
           count++
@@ -96,7 +96,6 @@ export function imgbb(req: Request, res: Response, next: NextFunction) {
         })
     })
   } else {
-    console.error('[express-imgbb] API KEY or images are missing.')
     next()
   }
 }

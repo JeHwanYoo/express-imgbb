@@ -10,6 +10,8 @@ It uses the official imgbb API [https://api.imgbb.com/](https://api.imgbb.com/)
 
 Check the official [API document](https://api.imgbb.com/) for detailed usage.
 
+You can use a blob file, base64 encoding, or web address.
+
 ```bash
 npm install express-imgbb
 ```
@@ -25,6 +27,7 @@ const { config } = require('dotenv')
 config()
 
 // Because the image size is large, you need to increase the limit.
+app.use(express.urlencoded({ extended: true, limit: '32mb' }))
 app.use(express.json({ limit: '32mb' }))
 
 // Get an API key from the official website. (https://api.imgbb.com/)
@@ -43,14 +46,11 @@ app.post('/upload', imgbb, (req, res) => {
 ## Request & Response Schema
 
 ```typescript
-type ImgbbRequest = {
-  apiKey: string
-  images: Array<{
-    image: string | Blob
-    name?: string
-    expiration?: number
-  }>
-}
+export type ImgbbRequest = Array<{
+  image: string | File
+  name?: string
+  expiration?: number
+}>
 
 type ImgbbResponse = {
   results: Array<{
@@ -97,3 +97,7 @@ type ImgbbResponse = {
   errors: string[] // Caution, it's not imgbb errors, it's network errors.
 }
 ```
+
+## Example
+
+If you check 'test' directory, there is an example of uploading using the base64 method.

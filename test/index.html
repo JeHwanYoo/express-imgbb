@@ -1,122 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>IMGBB UPLOAD</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
-</head>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+      crossorigin="anonymous"
+    />
+  </head>
 
-<body>
+  <body>
     <div class="container mt-5">
-        <div class="row">
-            <div class="col">
-                <form>
-                    <div class="mb-3">
-                        <label for="formFileMultiple" class="form-label">Choose Images</label>
-                        <input class="form-control" type="file" id="formFileMultiple" accept="image/*" multiple>
-                    </div>
-                </form>
+      <div class="row">
+        <div class="col">
+          <form>
+            <div class="mb-3">
+              <label for="formFileMultiple" class="form-label"
+                >Choose Images</label
+              >
+              <input
+                class="form-control"
+                type="file"
+                id="formFileMultiple"
+                accept="image/*"
+                multiple
+              />
             </div>
+          </form>
         </div>
-        <div class="row">
-            <div class="col-2">
-                <button id="button" type="button" class="btn btn-primary">UPLOAD</button>
-            </div>
-            <div class="col">
-                <div style="display: none;" id="loader">Uploading...</div>
-            </div>
+      </div>
+      <div class="row">
+        <div class="col-2">
+          <button id="button" type="button" class="btn btn-primary">
+            UPLOAD
+          </button>
         </div>
-        <div class="row">
-            <div class="col">
-                <ul id="file-list" class="list-group"></ul>
-            </div>
+        <div class="col">
+          <div style="display: none" id="loader">Uploading...</div>
         </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <ul id="file-list" class="list-group"></ul>
+        </div>
+      </div>
     </div>
     <script>
-        /**
-         * @type {HTMLInputElement}
-         */
-        const formFileMultiple = document.querySelector('#formFileMultiple');
-        /**
-         * @type {HTMLUListElement}
-         */
-        const fileList = document.querySelector('#file-list');
-        const iRequests = [];
-        /**
-         * @type {HTMLButtonElement} 
-         */
-        const button = document.querySelector('#button');
+      /**
+       * @type {HTMLInputElement}
+       */
+      const formFileMultiple = document.querySelector('#formFileMultiple')
+      /**
+       * @type {HTMLUListElement}
+       */
+      const fileList = document.querySelector('#file-list')
+      /**
+       * @type {HTMLButtonElement}
+       */
+      const button = document.querySelector('#button')
 
-        fileList.style.height = '600px';
-        fileList.style.overflow = 'auto';
+      fileList.style.height = '600px'
+      fileList.style.overflow = 'auto'
 
-        function initList() {
-            iRequests.splice(0, iRequests.length);
-            while (fileList.firstChild) {
-                fileList.removeChild(fileList.firstChild);
-            }
+      const request = []
+
+      function initList() {
+        request.splice(0, request.length)
+        while (fileList.firstChild) {
+          fileList.removeChild(fileList.firstChild)
         }
+      }
 
-        formFileMultiple.onchange = (evt => {
-            const files = evt.target.files;
+      formFileMultiple.onchange = evt => {
+        const files = evt.target.files
 
-            initList();
+        initList()
 
-            for (const file of files) {
-                const fileReader = new FileReader();
-                fileReader.readAsDataURL(file);
-                fileReader.onload = (evt => {
-                    iRequests.push({
-                        name: file.name,
-                        image: evt.target.result.split(',')[1],
-                    });
-                    const newLi = document.createElement('li');
-                    const newImg = document.createElement('img');
-                    newImg.src = evt.target.result;
-                    newImg.alt = file.name;
-                    newImg.height = 100;
-                    newLi.appendChild(newImg);
-                    newLi.appendChild(document.createTextNode(file.name));
-                    newLi.classList.add('list-group-item');
-                    fileList.appendChild(newLi);
-                })
-            }
-        });
-
-        button.onclick = async evt => {
-            /**
-             * @type {HTMLDivElement}
-             */
-            const loader = document.querySelector('#loader');
-            loader.style.display = 'block';
-
-            const response = await fetch('/upload', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ iRequests }),
-            });
-
-            initList();
-            formFileMultiple.value = '';
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log(data);
-                alert('Upload is complete. Please check the log.');
-                loader.style.display = 'none';
-            } else {
-                console.log(response);
-                alert('An error has occurred. Please check the log.');
-                loader.style.display = 'none';
-            }
+        for (const file of files) {
+          const fileReader = new FileReader()
+          fileReader.readAsDataURL(file)
+          fileReader.onload = evt => {
+            request.push({
+              image: evt.target.result.split(',')[1],
+              name: file.name,
+              expiration: 600,
+            })
+            const newLi = document.createElement('li')
+            const newImg = document.createElement('img')
+            newImg.src = evt.target.result
+            newImg.alt = file.name
+            newImg.height = 100
+            newLi.appendChild(newImg)
+            newLi.appendChild(document.createTextNode(file.name))
+            newLi.classList.add('list-group-item')
+            fileList.appendChild(newLi)
+          }
         }
+      }
+
+      button.onclick = async evt => {
+        /**
+         * @type {HTMLDivElement}
+         */
+        const loader = document.querySelector('#loader')
+        loader.style.display = 'block'
+
+        const response = await fetch('/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ imgbbRequest: request }),
+        })
+
+        initList()
+        formFileMultiple.value = ''
+
+        if (response.ok) {
+          const data = await response.json()
+          console.log(data)
+          alert('Upload is complete. Please check the log.')
+          loader.style.display = 'none'
+        } else {
+          console.log(await response.text())
+          alert('An error has occurred. Please check the log.')
+          loader.style.display = 'none'
+        }
+      }
     </script>
-</body>
-
+  </body>
 </html>

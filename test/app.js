@@ -1,23 +1,24 @@
-const { imgbb } = require('../dist/index');
-const express = require('express');
-const path = require('path');
-const app = express();
-const { config } = require('dotenv');
-config(); // dotenv is recommended to store the API Key.
+const { imgbb } = require('../dist/index')
+const express = require('express')
+const path = require('path')
+const app = express()
+const { config } = require('dotenv')
+config() // dotenv is recommended to store the API Key.
 
-const port = 3001;
+const port = 3001
 
-app.use(express.json({ limit: '32mb' }));
-app.set('IMGBB_API_KEY', process.env.API_KEY);
+app.use(express.urlencoded({ extended: true, limit: '32mb' }))
+app.use(express.json({ limit: '32mb' }))
+app.set('IMGBB_API_KEY', process.env.API_KEY)
 
 app.get('/', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'index.html'))
-});
+  res.sendFile(path.resolve(__dirname, 'index.html'))
+})
 
 app.post('/upload', imgbb, (req, res) => {
-    res.json(req['iResponses']);
-});
+  res.json(req['imgbb'])
+})
 
 app.listen(port, () => {
-    console.log(`http://localhost:${port}`);
-});
+  console.log(`http://localhost:${port}`)
+})
