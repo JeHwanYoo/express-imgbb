@@ -1,101 +1,101 @@
-import { Request, Response, NextFunction } from 'express';
-import fetch from 'node-fetch';
-import { stringify } from 'querystring';
+import { Request, Response, NextFunction } from 'express'
 
 export type ImgbbResponse = {
-    data: {
-        id: string,
-        title: string,
-        url_viewer: string,
-        url: string,
-        display_url: string,
-        size: string,
-        time: string,
-        expiration: string,
-        image: {
-            filename: string,
-            name: string,
-            mime: string,
-            extension: string,
-            url: string,
-        },
-        thumb: {
-            filename: string,
-            name: string,
-            mime: string,
-            extension: string,
-            url: string,
-        },
-        medium: {
-            filename: string,
-            name: string,
-            mime: string,
-            extension: string,
-            url: string,
-        },
-        delete_url: string
-    } | null,
-    success: boolean,
+  results: Array<{
+    data?: {
+      id: string
+      title: string
+      url_viewer: string
+      url: string
+      display_url: string
+      size: string
+      time: string
+      expiration: string
+      image: {
+        filename: string
+        name: string
+        mime: string
+        extension: string
+        url: string
+      }
+      thumb: {
+        filename: string
+        name: string
+        mime: string
+        extension: string
+        url: string
+      }
+      medium: {
+        filename: string
+        name: string
+        mime: string
+        extension: string
+        url: string
+      }
+      delete_url: string
+    }
+    error?: {
+      message: string
+      code: number
+      context: string
+    }
+    success: boolean
     status: number
-    error: {
-        message: string,
-        code: number,
-        context: string,
-    } | null
-};
-
-export type ImgbbRequest = {
-    image: string,
-    name?: string,
-    expiration?: string,
+  }>
+  errors: string[] // Caution, it's not imgbb errors, it's network errors.
 }
 
-export type ImgbbRequestArray = Array<ImgbbRequest>;
-export type ImgbbResponseArray = Array<ImgbbResponse>;
+export type ImgbbRequest = {
+  apiKey: string
+  images: Array<{
+    image: string | File
+    name?: string
+    expiration?: number
+  }>
+}
 
-export async function imgbb(req: Request, res: Response, next: NextFunction) {
-    const body = req.body;
-    const iRequests: ImgbbRequestArray = body.iRequests;
-    const iResponses: ImgbbResponseArray = [];
-    const API_KEY = req.app.get('IMGBB_API_KEY');
-    let API_URL = `https://api.imgbb.com/1/upload?key=${API_KEY}`;
+export function imgbb(req: Request, res: Response, next: NextFunction) {
+  const { apiKey, images } = req.body.imgbbRequest as ImgbbRequest
+  let count = 0
+  const maxCount = images.length
+  const response = { results: [], errors: [] } as ImgbbResponse
 
-    for (const img of iRequests) {
-        if (img.name) {
-            API_URL += `&name=${img.name}`;
-        }
-        if (img.expiration) {
-            API_URL += `&expiration=${img.expiration}`;
-        }
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: stringify({
-                image: img.image,
-            }),
-        });
-        const json = await response.json();
-        let format: ImgbbResponse;
-        if (json.error) {
-            format = {
-                data: null,
-                success: false,
-                status: json.status_code,
-                error: json.error,
-            };
-        } else {
-            format = {
-                data: json.data,
-                success: true,
-                status: 200,
-                error: null,
-            };
-        }
-        iResponses.push(format);
-    }
-    req['iResponses'] = iResponses;
-    next();
+  if (apiKey && apiKey.length > 0 && images && images.length > 0) {
+    images.forEach(({ image, name, expiration }) => {
+      let url = `https://api.imgbb.com/1/upload?key=${apiKey}`
+      const formData = new FormData()
+
+      if (expiration) {
+        url += `&expiration=${expiration}`
+      }
+
+      if (name) {
+        formData.append('name', name)
+      }
+
+      formData.append('image', image)
+
+      fetch(url, {
+        method: 'POST',
+        body: formData,
+      })
+        .then(async v => {
+          const result = await v.json()
+          count++
+          response.results.push(result)
+        })
+        .catch(e => {
+          count++
+          response.errors.push(e)
+        })
+        .finally(() => {
+          if (count === maxCount) {
+            next()
+          }
+        })
+    })
+  } else {
+    console.error('[express-imgbb] API KEY or images are missing.')
+    next()
+  }
 }
