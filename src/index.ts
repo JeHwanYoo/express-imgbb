@@ -48,7 +48,7 @@ export type ImgbbResponse = {
 }
 
 export type ImgbbRequest = Array<{
-  image: string | File
+  image: string
   name?: string
   expiration?: number
 }>

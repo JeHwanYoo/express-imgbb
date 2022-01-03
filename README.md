@@ -10,7 +10,11 @@ It uses the official imgbb API [https://api.imgbb.com/](https://api.imgbb.com/)
 
 Check the official [API document](https://api.imgbb.com/) for detailed usage.
 
-You can use a blob file, base64 encoding, or web address.
+You can use base64 encoding, or web address.
+
+It may be implementable to upload the binary file directly, but it will not be easy to receive the file from the client and send the object again.
+
+In this case, do not use middleware and call the API directly.
 
 ```bash
 npm install express-imgbb
@@ -47,7 +51,7 @@ app.post('/upload', imgbb, (req, res) => {
 
 ```typescript
 export type ImgbbRequest = Array<{
-  image: string | File
+  image: string // base64 or url path
   name?: string
   expiration?: number
 }>
