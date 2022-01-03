@@ -1,6 +1,6 @@
 {
   "name": "express-imgbb",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "express middleware for imgbb",
   "main": "dist/index.js",
   "scripts": {
